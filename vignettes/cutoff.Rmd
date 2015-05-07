@@ -1,0 +1,149 @@
+---
+title: "Identifying a cutoff value from bimodal data"
+csl: the-american-naturalist.csl
+output:
+  html_document:
+    theme: cerulean
+    toc: yes
+bibliography: references.bib
+---
+
+```{r include=FALSE}
+knitr::knit_hooks$set(margin = function(before,options,envir) {
+  if(before) par(mgp=c(1.5,0.5,0),bty="n",plt=c(.105,1,.13,1))
+  else NULL
+})
+knitr::opts_chunk$set(margin=T,prompt=T,comment="",collapse=T,cache=T,
+                      dev.args=list(pointsize=11),fig.height=3.5,
+                      fig.width=4.24725,fig.retina=2)
+#hist <- function(x,...) graphics::hist(x,ylim=c(0,.4),main=NULL,col="grey",...)
+hash <- c(normal=dnorm,"log-normal"=dlnorm,gamma=dgamma,weibull=dweibull)
+```
+
+
+This tutorial shows step by step how to use finite mixture models to model
+bimodal data and to derive a cut-off value that separates the two peaks for
+a given type-I error. It shows in particular how to estimate the parameters of
+the finite mixture model with the Expectation-Maximization (E-M) algorithm
+together with the confidence intervals of the estimations. This method is used
+in [[@Trang2015]](www.rstudio.com). For questions and/or help, contact me at
+marc.choisy@ird.fr.
+
+### Installing and loading the \code{cutoff} package
+
+Once you've download the package \code{cutoff} from [here](www.rstudio.com) you
+can install it by the following command:
+```{r eval=FALSE}
+install.packages("path_of_the_package/cutoff-0.1.0.tar.gz")
+```
+This needs to be done only once on a computer, unless there is a new version of
+R or the package.
+
+Once the package is installed on your computer you need to load it to use it
+```{r}
+library(cutoff)
+```
+and this need to be done for each working session. This package contains two
+main functions:
+* \code{em} that fit a finite mixture model to bimodal data with the
+Expectation-Maximization algorithm
+* \code{cutoff} that calculate a cutoff value from a fitted finite mixture
+model, given a type-1 error
+There are additional functions, mainly to visualize the results and that we
+introduce below.
+
+### Bimodal data
+
+The data should be contained in a numerical vector. Here is an example of
+bimodal data containing the IgG concentration against measles virus:
+```{r}
+length(measles)
+range(measles)
+# A histogram of the data:
+hist(measles,100,F,xlab="concentration",ylab="density",ylim=c(0,.55),
+     main=NULL,col="grey")
+# A kernel density estimation of the distribution:
+lines(density(measles),lwd=1.5,col="blue")
+```
+
+This figure shows the histogram of the data together with a non-parametric
+estimation of the distribution. The two suggest a bimodal distribution of
+the data.
+
+### Finite mixture models
+
+We can model such a bimodal distribution by a finite mixture model that uses
+continuous distributions from the exponential family [@Schlattmann2009]. In
+absence of clear expectation on the shape of these distributions, we can
+consider the normal, the gamma and the Weibull distributions. The normal
+distribution is defined on all the real numbers, whereas the gamma and Weibull
+distributions are defined on positive reals. These three distributions are
+characterized by 2 parameters: a location parameter $\mu$ and a scale parameter
+$\sigma$. The first parameter accounts for the location of most of the data and
+corresponds to the mean of the normal distribution, and the shape parameter for
+the gamma and Weibull distributions. The second parameter accounts for the
+spread of the data around the location parameter and corresponds to the standard
+deviation in the case of the normal distribution, the rate parameter (1/scale)
+for the gamma distribution and the scale parameter for the Weibull distribution.
+We refer to $\mu_1$ and $\sigma_1$ for the location and scale parameters of the
+peak of the lower concentrations and $\mu_2$ and $\sigma_2$ for the location and
+scale parameters of the peak of the higher concentrations. The density of the
+bimodal distribution of concentrations thus reads
+$$
+f(x|\lambda,\mu_1,\sigma_1,\mu_2,\sigma_2) =
+  \lambda\times\mathcal{D}_1(x|\mu_1,\sigma_1) +
+  (1-\lambda)\times\mathcal{D}_2(x|\mu_2,\sigma_2)
+$$
+
+The parameters of the finite mixture model are estimated by the E-M algorithm
+[@Do2008] as coded by the \code{em} function. These parameters include two
+parameters for each of the two probability distributions and a mixture parameter.
+```{r}
+# Estimating the parameters of the finite mixture model:
+(measles_out <- em(measles,"normal","normal"))
+# The confidence interval of the parameter estimates:
+confint(measles_out,nb=100,level=.95)
+# The plot:
+hist(measles,100,F,xlab="concentration",ylab="density",ylim=c(0,.55),
+     main=NULL,col="grey")
+lines(measles_out,lwd=1.5,col="red")
+```
+
+Confidence interval for the mixture parameter $\lambda$ is found using the
+method of @Oakes1999.
+
+### Identifying a cutoff value
+
+We can use the fitted finite mixture model to identify a cutoff value that
+discriminate the two modes of the dataset. For that, we compute the probability
+for a datum to belong to distribution $\mathcal{D}_1$ as
+$$
+p_1 = \frac{\lambda\times\mathcal{D}_1(x|\mu_1,\sigma_1)}
+  {\lambda\times\mathcal{D}_1(x|\mu_1,\sigma_1)+
+  (1-\lambda)\times\mathcal{D}_2(x|\mu_2,\sigma_2)}
+$$
+and the probability for a datum to belong to distribution $\mathcal{D}_1$ as
+$$
+p_2 = \frac{(1-\lambda)\times\mathcal{D}_2(x|\mu_2,\sigma_2)}
+  {\lambda\times\mathcal{D}_1(x|\mu_1,\sigma_1)+
+  (1-\lambda)\times\mathcal{D}_2(x|\mu_2,\sigma_2)}
+$$
+We equate this probability to the type-I error we aim at to find the cutoff
+value. The confidence interval of the cutoff value is computed by Monte Carlo
+simulations (see the help of the `cutoff` function for more details). In
+practice, this gives:
+```{r}
+hist(measles,100,F,xlab="concentration",ylab="density",ylim=c(0,.55),
+     main=NULL,col="grey")
+lines(measles_out,lwd=1.5,col="red")
+# Estimating a cutoff value from this fitted finite mixture model:
+(cut_off <- cutoff(measles_out))
+# Plotting it:
+polygon(c(cut_off[-1],rev(cut_off[-1])),c(0,0,.55,.55),
+        col=rgb(0,0,1,.2),border=NA)
+abline(v=cut_off[-1],lty=2,col="blue")
+abline(v=cut_off[1],col="blue")
+```
+
+
+### References
