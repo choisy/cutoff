@@ -1,6 +1,6 @@
 # cutoff
 
-This is an R package that implement the method used in Trang et al. (2015). It fits a finite mixture model (Schlattman 2009) to a
+This is an R package that implements the method used in Trang et al. (2015). It fits a finite mixture model (Schlattman 2009) to a
 bimodal distribution using the Expectation-Maximization algorithm (Do and Batzoglou 2008). Confidence interval of the mixture
 parameter is found using the method of Oakes (1999). The fitted finite mixture model is then used to calculate a cutoff value that
 separate the data in two group, given a type-1 error to belong to one of the two modes.
