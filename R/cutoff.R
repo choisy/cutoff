@@ -88,27 +88,27 @@ cutoff0 <- function(mu1,sigma1,mu2,sigma2,lambda,D1,D2,distr=2,type1=.05) {
 # This function returns cutoff value together with confidence interval from an
 # output of the "em" function.
 cutoff <- function(object,t=1e-64,nb=10,distr=2,type1=.05,level=.95) {
-# "object" is an output of the "em" function.
-#  require(mc2d) # for "rmultinormal".
-#  require(MASS) # for "fitdistr".
-# The dictionary:  
-#  hash <- c(normal=dnorm,"log-normal"=dlnorm,gamma=dgamma,weibull=dweibull)
+  # "object" is an output of the "em" function.
+  #  require(mc2d) # for "rmultinormal".
+  #  require(MASS) # for "fitdistr".
+  # The dictionary:  
+  #  hash <- c(normal=dnorm,"log-normal"=dlnorm,gamma=dgamma,weibull=dweibull)
   with(object,{
-    coef <- coef(out)
+    coef <- out@coef
     the_names <- names(coef)
-# First we draw values for mu1, sigma1, mu2 and sigma2 in a multinormal
-# distribution:
-    coef <- exp(mc2d::rmultinormal(nb,coef,as.vector(vcov(out))))
+    # First we draw values for mu1, sigma1, mu2 and sigma2 in a multinormal
+    # distribution:
+    coef <- exp(mc2d::rmultinormal(nb,coef,as.vector(bbmle::vcov(out))))
     coef <- as.list(data.frame(t(coef)))
     coef <- lapply(coef,function(x){
       names(x) <- the_names
       return(as.list(x))}
     )
-# Then we draw random lambda value:
+    # Then we draw random lambda value:
     out <- sapply(coef,function(x)
       lci0(x,mean(lambda),hash[[D1]],hash[[D2]],data,t)) # mean and sd of lambda
     lambda <- rnorm(nb,out[1,],out[2,]) # random value of lambda
-# Put all the coefficients together:
+    # Put all the coefficients together:
     coef <- sapply(coef,function(x)unlist(x))
     the_names <- c(rownames(coef),"lambda")
     coef <- rbind(coef,lambda) # append to other parameters
@@ -116,16 +116,16 @@ cutoff <- function(object,t=1e-64,nb=10,distr=2,type1=.05,level=.95) {
       names(x) <- the_names
       return(as.list(x))
     })
-# Call the function "cutoff0" for each combination of parameters values:
+    # Call the function "cutoff0" for each combination of parameters values:
     out <- sapply(coef,function(x)
       with(x,cutoff0(mu1,sigma1,mu2,sigma2,lambda,D1,D2,distr,type1)))
-# Calculate the mean of the cutoff value, together with its confidence interval:
+    # Calculate the mean of the cutoff value, together with its confidence interval:
     out <- MASS::fitdistr(out,"normal")
     the_mean <- out$estimate["mean"]
     level <- (1-level)/2
     level <- c(level,1-level)
     ci <- the_mean+qt(level,Inf)*out$sd["mean"]
-# Put in shape and return the output:
+    # Put in shape and return the output:
     out <- c(the_mean,ci)
     names(out) <- c("Estimate",paste(100*level,"%"))
     return(out)
