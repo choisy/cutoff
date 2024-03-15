@@ -2,6 +2,7 @@ Package: cutoff2
 Type: Package
 Title: Identify a cutoff value from bimodal data
 Version: 0.1.0
+Encoding: UTF-8
 Date: 2024-15-03
 Authors@R: c(
  person("David", "Pleydell", email="david.pleydell@inrae.fr", role=c("aut","cre","cph"), comment = c("Package developer", ORCID = "0000-0002-6450-1475")),
@@ -22,3 +23,4 @@ Suggests:
   testthat
 VignetteBuilder: knitr
 LazyData: true
+RoxygenNote: 7.2.0

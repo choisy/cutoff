@@ -4,7 +4,7 @@
 # This function returns minus the log-likelihood of the set of parameters "mu1",
 # "sigma1", "mu2" and "sigma2", given dataset "data", distributions "D1" and
 # "D2", and parameter "lambda".
-mLL <- function(mu1,sigma1,mu2,sigma2,lambda,data,D1,D2) {
+mLL <- function(mu1,sigma1,mu2,sigma2,lambda,data,D1,D2,penaltyScale) {
 # "mu1", "mu2", "sigma1" and "sigma2" are the log of the parameter values.
 # "lambda" and "data" are two numeric vectors of the same length.
 # "D1" and "D2" are two functions of probability density.
@@ -13,9 +13,15 @@ mLL <- function(mu1,sigma1,mu2,sigma2,lambda,data,D1,D2) {
   with(as.list(exp(params)), {
     out <- lambda*D1(data,mu1,sigma1)
     out <- out+(1-lambda)*D2(data,mu2,sigma2)
+    ## Penalties
+    ## if (penaltyScale > 0) {
+    ##   out <- out + penalty()
+    ## }
     return(-sum(log(out)))
   })
 }
+
+##penalty
 
 #-------------
 
@@ -108,7 +114,7 @@ startval <- function(data,D1,D2) {
 #' @export
 # This function uses the EM algorithm to calculates parameters "lambda"
 # (E step), "mu1", "sigma1", "mu2" and "sigma2" (M step).
-em <- function(data,D1,D2,t=1e-64) {
+em <- function(data,D1,D2,t=1e-64, penaltyScale=0) {
   data_name <- unlist(strsplit(deparse(match.call()),"="))[2]
   data_name <- sub(",.*$","",gsub(" ","",data_name))
   start <- as.list(startval(data,D1,D2))
@@ -125,7 +131,7 @@ em <- function(data,D1,D2,t=1e-64) {
       lambda <- distr1/(distr1+distr2) # lambda is a vector.
 # Minimization step (maximum-likelihood parameters estimations):
       mLL2 <- function(mu1,sigma1,mu2,sigma2)
-			return(mLL(mu1,sigma1,mu2,sigma2,lambda,data,D1b,D2b))
+			return(mLL(mu1,sigma1,mu2,sigma2,lambda,data,D1b,D2b,penaltyScale))
       start <- as.list(log(c(mu1=mu1,sigma1=sigma1,mu2=mu2,sigma2=sigma2)))
       out <- bbmle::mle2(mLL2,start,"Nelder-Mead")
 # The following 4 lines assign the MLE values to the corresponding parameters:

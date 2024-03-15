@@ -91,4 +91,3 @@ confint(measles_out,t=1e-64,nb=100,level=.95)
 lines(measles_out,lwd=1.5,col="red")
 # The legend:
 legend("topleft",leg=c("non-parametric","E-M"),col=c("blue","red"), lty=1,lwd=1.5,bty="n")
-sessionInfo()

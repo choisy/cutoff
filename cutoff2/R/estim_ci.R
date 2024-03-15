@@ -71,19 +71,19 @@ lambda_ci <- function(object,t=1e-64,nb=10,level=.95) {
   with(object,{
     coef <- coef(out)
     the_names <- names(coef)
-# First, draw mu1, sigma1, mu2 and sigma2 values in a multinormal distribution:
+    # First, draw mu1, sigma1, mu2 and sigma2 values in a multinormal distribution:
     coef <- exp(mc2d::rmultinormal(nb,coef,as.vector(vcov(out))))
     coef <- as.list(data.frame(t(coef)))
     coef <- lapply(coef,function(x){
       names(x) <- the_names
       return(as.list(x))
     })
-# Then we calculate confidence interval of lambda:
+    # Then we calculate confidence interval of lambda:
     out <- sapply(coef,function(x)lci(x,mean(lambda),
       hash[[D1]],hash[[D2]],data,t,level))
     out <- t(as.matrix(apply(out,1,mean)))
     level <- 100*(1-level)/2
-# Put in shape and return the output:
+    # Put in shape and return the output:
     colnames(out) <- c("Estimate",paste(level,"%"),paste(100-level,"%"))
     rownames(out) <- "lambda"
     return(out)

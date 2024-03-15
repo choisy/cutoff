@@ -1,5 +1,5 @@
 #' The mode of a probability distribution.
-#' 
+#'
 #' @keywords internal
 # This function finds the mode of distribution knowing its parameters values.
 findmode <- function(D,p1,p2) {
@@ -48,7 +48,7 @@ cutoff0 <- function(mu1,sigma1,mu2,sigma2,lambda,D1,D2,distr=2,type1=.05) {
 #' The confidence interval of the cutoff value is computed by fitting a normal
 #' distribution by maximum likelihood to the Monte-Carlo-derived values of the
 #' cutoff. This last step is performed by the \code{fitdistr} function of the
-#' \code{MASS} package. 
+#' \code{MASS} package.
 #'
 #' @inheritParams em
 #' @inheritParams confint.em
@@ -91,7 +91,7 @@ cutoff <- function(object,t=1e-64,nb=10,distr=2,type1=.05,level=.95) {
   # "object" is an output of the "em" function.
   #  require(mc2d) # for "rmultinormal".
   #  require(MASS) # for "fitdistr".
-  # The dictionary:  
+  # The dictionary:
   #  hash <- c(normal=dnorm,"log-normal"=dlnorm,gamma=dgamma,weibull=dweibull)
   with(object,{
     coef <- out@coef
