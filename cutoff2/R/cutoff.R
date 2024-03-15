@@ -20,9 +20,9 @@ findmode <- function(D,p1,p2) {
 cutoff0 <- function(mu1,sigma1,mu2,sigma2,lambda,D1,D2,distr=2,type1=.05) {
 # "distr" indicates which peak we are targetting.
   interval <- c(findmode(D1,mu1,sigma1),findmode(D2,mu2,sigma2))
-#  hash <- c(normal=dnorm,"log-normal"=dlnorm,gamma=dgamma,weibull=dweibull)
-  D1 <- hash[[D1]]
-  D2 <- hash[[D2]]
+#  dHash <- c(normal=dnorm,"log-normal"=dlnorm,gamma=dgamma,weibull=dweibull)
+  D1 <- dHash[[D1]]
+  D2 <- dHash[[D2]]
   distr1 <- function(x) lambda * D1(x, mu1, sigma1)
   distr2 <- function(x) (1 - lambda) * D2(x, mu2, sigma2)
   if(distr==1) p <- function(x) distr1(x)/(distr1(x)+distr2(x))-1+type1
@@ -92,7 +92,7 @@ cutoff <- function(object,t=1e-64,nb=10,distr=2,type1=.05,level=.95) {
   #  require(mc2d) # for "rmultinormal".
   #  require(MASS) # for "fitdistr".
   # The dictionary:
-  #  hash <- c(normal=dnorm,"log-normal"=dlnorm,gamma=dgamma,weibull=dweibull)
+  #  dHash <- c(normal=dnorm,"log-normal"=dlnorm,gamma=dgamma,weibull=dweibull)
   with(object,{
     coef <- out@coef
     the_names <- names(coef)
@@ -106,7 +106,7 @@ cutoff <- function(object,t=1e-64,nb=10,distr=2,type1=.05,level=.95) {
     )
     # Then we draw random lambda value:
     out <- sapply(coef,function(x)
-      lci0(x,mean(lambda),hash[[D1]],hash[[D2]],data,t)) # mean and sd of lambda
+      lci0(x,mean(lambda),dHash[[D1]],dHash[[D2]],data,t)) # mean and sd of lambda
     lambda <- rnorm(nb,out[1,],out[2,]) # random value of lambda
     # Put all the coefficients together:
     coef <- sapply(coef,function(x)unlist(x))

@@ -15,4 +15,4 @@ qHash <- list(normal       = stats::qnorm,
               gamma        = stats::qgamma,
               weibull      = stats::qweibull)
 
-save(dHash, pHash, qHash, file = here::here("R/sysdata.rda"))
+save(dHash, pHash, qHash, file = here::here("cutoff2/R/sysdata.rda"))

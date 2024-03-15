@@ -67,7 +67,7 @@ lambda_ci <- function(object,t=1e-64,nb=10,level=.95) {
 # "object" is an output of the function "em".
 # "nb" is the number of Monte Carlo simulations.
 #  require(mc2d) # for "rmultinormal".
-#  hash <- c(normal=dnorm,"log-normal"=dlnorm,gamma=dgamma,weibull=dweibull)
+#  dHash <- c(normal=dnorm,"log-normal"=dlnorm,gamma=dgamma,weibull=dweibull)
   with(object,{
     coef <- coef(out)
     the_names <- names(coef)
@@ -80,7 +80,7 @@ lambda_ci <- function(object,t=1e-64,nb=10,level=.95) {
     })
     # Then we calculate confidence interval of lambda:
     out <- sapply(coef,function(x)lci(x,mean(lambda),
-      hash[[D1]],hash[[D2]],data,t,level))
+      dHash[[D1]],dHash[[D2]],data,t,level))
     out <- t(as.matrix(apply(out,1,mean)))
     level <- 100*(1-level)/2
     # Put in shape and return the output:

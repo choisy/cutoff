@@ -118,8 +118,8 @@ em <- function(data, D1, D2, t=1e-64, penaltyScale=0) {
   data_name <- unlist(strsplit(deparse(match.call()),"="))[2]
   data_name <- sub(",.*$","",gsub(" ","",data_name))
   start <- as.list(startval(data,D1,D2))
-  D1b <- hash[[D1]]
-  D2b <- hash[[D2]]
+  D1b <- dHash[[D1]]
+  D2b <- dHash[[D2]]
   lambda0 <- 0 # the previous value of lambda (scalar).
   with(start, {
     while(abs(lambda0-mean(lambda))>t) {
