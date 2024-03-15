@@ -98,7 +98,7 @@ startval <- function(data,D1,D2) {
 #' length(measles)
 #' range(measles)
 #' # Plotting the data:
-#' hist(measles,100,F,xlab="concentration",ylab="density",ylim=c(0,.55),
+#' hist(measles,100,FALSE,xlab="concentration",ylab="density",ylim=c(0,.55),
 #'   main=NULL,col="grey")
 #' # The kernel density:
 #' lines(density(measles),lwd=1.5,col="blue")

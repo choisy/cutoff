@@ -15,6 +15,7 @@ findmode <- function(D,p1,p2) {
 
 #' Cutoff value given parameter values.
 #'
+#' @importFrom stats uniroot
 #' @keywords internal
 # This function returns the cutoff value given parameters values.
 cutoff0 <- function(mu1,sigma1,mu2,sigma2,lambda,D1,D2,distr=2,type1=.05) {
@@ -72,7 +73,7 @@ cutoff0 <- function(mu1,sigma1,mu2,sigma2,lambda,D1,D2,distr=2,type1=.05) {
 #' length(measles)
 #' range(measles)
 #' # Plotting the data:
-#' hist(measles,100,F,xlab="concentration",ylab="density",ylim=c(0,.55),
+#' hist(measles,100,FALSE,xlab="concentration",ylab="density",ylim=c(0,.55),
 #'   main=NULL,col="grey")
 #' # Estimating the parameters of the finite mixture model:
 #' (measles_out <- em(measles,"normal","normal"))
