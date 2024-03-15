@@ -60,5 +60,35 @@ if (ii < length(X)) {
 (penaltyScale * penaltyRight)
 (penaltyTotal = penaltyScale * (penaltyLeft + penaltyRight))
 
+## ADD THIS TO MARC CHOISY'S LOG LIKELIHOOD
 
-## Add this to Marc Choisy's Log Likelihood
+###########################
+## Examples from package ##
+###########################
+sessionInfo()
+library(mc2d)
+library(MASS)
+library(tree)
+
+detach("package:cutoff", unload=TRUE)
+source("~/R/package_workshop/cutoff/R/cutoff.R")
+source("~/R/package_workshop/cutoff/R/em.R")
+source("~/R/package_workshop/cutoff/R/estim_ci.R")
+data(measles, package="cutoff")
+
+# Measles IgG concentration data:
+length(measles)
+range(measles)
+# Plotting the data:
+hist(measles,100,F,xlab="concentration",ylab="density",ylim=c(0,.55), main=NULL,col="grey")
+# The kernel density:
+lines(density(measles),lwd=1.5,col="blue")
+# Estimating the parameters of the finite mixture model:
+(measles_out <- em(measles,"normal","normal"))
+# The confidence interval of the parameter estimates:
+confint(measles_out,t=1e-64,nb=100,level=.95)
+# Adding the E-M estimated finite mixture model:
+lines(measles_out,lwd=1.5,col="red")
+# The legend:
+legend("topleft",leg=c("non-parametric","E-M"),col=c("blue","red"), lty=1,lwd=1.5,bty="n")
+sessionInfo()

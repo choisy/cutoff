@@ -14,13 +14,13 @@ mLL <- function(mu1,sigma1,mu2,sigma2,lambda,data,D1,D2) {
     out <- lambda*D1(data,mu1,sigma1)
     out <- out+(1-lambda)*D2(data,mu2,sigma2)
     return(-sum(log(out)))
-  })  
+  })
 }
 
 #-------------
 
 #' Starting values of the parameter of a finite mixture model.
-#' 
+#'
 #' @keywords internal
 # This function calculates the starting values of parameter "lambda".
 startval <- function(data,D1,D2) {
@@ -83,7 +83,7 @@ startval <- function(data,D1,D2) {
 #'    maximization algorithm? Nature Biotechnology 26(8): 897-899.\cr
 #'  \cr
 #'  Peter Schlattmann (2009) Medical Applications of Finite Mixture Models.
-#'    Springer-Verlag, Berlin.  
+#'    Springer-Verlag, Berlin.
 #' @seealso \code{\link{confint.em}} method for calculating the confidence
 #'    intervals of the parameters and \code{\link{cutoff}} for deriving a
 #'    cut-off value.
@@ -194,10 +194,10 @@ lines.em <- function(object,...) {
 #-------------
 
 #' Confint method of S3-class \code{em}.
-#' 
+#'
 #' This method of the S3 \code{em} class calculates the confidence intervals of
 #' the parameters of the fitted finite mixture model.
-#' 
+#'
 #' Confidence intervals of the parameters of probability distributions are
 #' calculated by the \code{confint} method of the S4 \code{confint} class of the
 #' \code{bbmle} package with default values. See the help of this method for

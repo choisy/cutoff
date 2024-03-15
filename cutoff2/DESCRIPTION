@@ -1,0 +1,24 @@
+Package: cutoff2
+Type: Package
+Title: Identify a cutoff value from bimodal data
+Version: 0.1.0
+Date: 2024-15-03
+Authors@R: c(
+ person("David", "Pleydell", email="david.pleydell@inrae.fr", role=c("aut","cre","cph"), comment = c("Package developer", ORCID = "0000-0002-6450-1475")),
+ person("Marc", "Coisy", role = "cph", comment = c("Author of the cutoff package")))
+Maintainer: David Pleydell <david.pleydell@inrae.fr>
+Description: Extends the cutoff package (Marc Choisy).
+    Estimates a finite mixture model to bimodal data using normal,
+	log-normal, gamma of Weibull distributions. Estimations are performed
+	with the Expectation-Maximization algorithm. Confidence intervals are
+	computed from the Fisher information matrix and Monte Carlo simulations.
+License: GPL-3
+Imports:
+  mc2d,
+  MASS,
+  tree
+Suggests:
+  knitr,
+  testthat
+VignetteBuilder: knitr
+LazyData: true
