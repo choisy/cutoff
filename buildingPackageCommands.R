@@ -1,5 +1,7 @@
 sessionInfo()
 
+setwd(here::here())
+
 detach("package:cutoff")
 detach("package:cutoff2")
 unloadNamespace("cutoff")

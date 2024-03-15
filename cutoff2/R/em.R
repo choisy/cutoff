@@ -114,7 +114,7 @@ startval <- function(data,D1,D2) {
 #' @export
 # This function uses the EM algorithm to calculates parameters "lambda"
 # (E step), "mu1", "sigma1", "mu2" and "sigma2" (M step).
-em <- function(data,D1,D2,t=1e-64, penaltyScale=0) {
+em <- function(data, D1, D2, t=1e-64, penaltyScale=0) {
   data_name <- unlist(strsplit(deparse(match.call()),"="))[2]
   data_name <- sub(",.*$","",gsub(" ","",data_name))
   start <- as.list(startval(data,D1,D2))
@@ -153,7 +153,8 @@ em <- function(data,D1,D2,t=1e-64, penaltyScale=0) {
 
 #' Print method of S3-class "em".
 #'
-#' @S3method print em
+#' @export
+#' @method print em
 print.em <- function(object) {
   hash <- list(
     normal=c("mean","sd"),
@@ -185,7 +186,8 @@ print.em <- function(object) {
 
 #' Lines method of S3-class "em".
 #'
-#' @S3method lines em
+#' @export
+#' @method lines em
 lines.em <- function(object,...) {
 # ...: parameter passed to the "line" function.
   with(object,with(as.list(param), {
@@ -223,7 +225,8 @@ lines.em <- function(object,...) {
 #'   finite mixture model (five row, one per parameter).
 #' @references David Oakes (1999) Direct calculation of the information matrix
 #'   via the EM algorithm. J R Statist Soc B, 61: 479-482.
-#' @S3method confint em
+#' @export
+#' @method confint em
 # This function returns the parameter values and their confidence
 # intervals from an output of the "em" function.
 confint.em <- function(object,t=1e-64,nb=10,level=.95) {
