@@ -4,24 +4,66 @@
 # This function returns minus the log-likelihood of the set of parameters "mu1",
 # "sigma1", "mu2" and "sigma2", given dataset "data", distributions "D1" and
 # "D2", and parameter "lambda".
-mLL <- function(mu1,sigma1,mu2,sigma2,lambda,data,D1,D2,penaltyScale) {
+mLL <- function(mu1,sigma1,mu2,sigma2,lambda,data,D1,D2,P1,P2,Q1,Q2,penaltyScale) {
 # "mu1", "mu2", "sigma1" and "sigma2" are the log of the parameter values.
 # "lambda" and "data" are two numeric vectors of the same length.
-# "D1" and "D2" are two functions of probability density.
+# "D1" and "D2" are two probability density functions.
+# "P1" and "P2" are two cummulative distribution functions.
+# "Q1" and "Q2" are two quantile functions.
   params <- c(mu1,sigma1,mu2,sigma2)
   names(params) <- c("mu1","sigma1","mu2","sigma2")
   with(as.list(exp(params)), {
-    out <- lambda*D1(data,mu1,sigma1)
-    out <- out+(1-lambda)*D2(data,mu2,sigma2)
+    out1 <-    lambda  * D1(data,mu1,sigma1)
+    out2 <- (1-lambda) * D2(data,mu2,sigma2)
     ## Penalties
-    ## if (penaltyScale > 0) {
-    ##   out <- out + penalty()
-    ## }
-    return(-sum(log(out)))
+    penalty <- 0
+    if (penaltyScale > 0) {
+      if (mu1 < mu2) {
+        penalty <- calcPenalty(mu1,sigma1,mu2,sigma2,lambda,data,D1,D2,P1,P2,Q1,Q2,penaltyScale)
+      } else {
+        penalty <- calcPenalty(mu2,sigma2,mu1,sigma1,1-lambda,data,D2,D1,P2,P1,Q2,Q1,penaltyScale)
+      }
+    }
+    return( -sum(log(out1 + out2)) - penalty)
   })
 }
 
-##penalty
+
+#' Generates a penalty against biologically non-sensical fits
+#' to be added to the log-likelihood of the finite mixture model.
+#'
+#' @keywords internal
+# This function returns the penalty to be added to the log-likelihood, given parameters "MU1",
+# "SIGMA1", "MU2" and "SIGMA2", given dataset "data", density functions "d1" and
+# "d2", parameter "LAMBDA", distribution functions p1, p2 and quantile functions q1 and q2.
+calcPenalty <- function(MU1,SIGMA1,MU2,SIGMA2,LAMBDA,data,d1,d2,p1,p2,q1,q2,penaltyScale) {
+  ## calcPenalty assumes MU1 < MU2
+  w1 = LAMBDA
+  w2 = (1-LAMBDA)
+  #### Penalise LHS
+  X             = seq(floor(q1(1E-11,MU1,SIGMA1)), ceiling(q1(1-1E-11,MU1,SIGMA1)), l=1111)
+  iNonsenseLeft = w1*d1(X,MU1,SIGMA1) < w2*d2(X,MU2,SIGMA2)
+  iNonsenseLeft = cumprod(iNonsenseLeft)==1
+  ii            = sum(iNonsenseLeft)
+  penaltyLeft   = 0
+  if (ii > 0) {
+    areaNonsenseLeft = (w2*(p2(X[ii],MU2,SIGMA2))) - (w1*(p1(X[ii],MU1,SIGMA1)))
+    penaltyLeft      = log(1-areaNonsenseLeft)
+  }
+  #### Penalise RHS
+  X              = seq(floor(q2(1E-11,MU2,SIGMA2)), ceiling(q2(1-1E-11,MU2,SIGMA2)), l=1111)
+  iNonsenseRight = w1*d1(X,MU1,SIGMA1) > w2*d2(X,MU2,SIGMA2)
+  iNonsenseRight = rev(cumprod(rev(iNonsenseRight))==1)
+  ii             = sum(!iNonsenseRight)
+  penaltyRight   = 0
+  if (ii < length(X)) {
+    areaNonsenseRight = w1*(1-p1(X[ii],MU1,SIGMA1)) - w2*(1-p2(X[ii],MU2,SIGMA2))
+    penaltyRight      = log(1-areaNonsenseRight)
+  }
+  #### Total Penalty
+  penaltyTotal = penaltyScale * (penaltyLeft + penaltyRight)
+  return(penaltyTotal)
+}
 
 #-------------
 
@@ -70,6 +112,7 @@ startval <- function(data,D1,D2) {
 #'  See Details.
 #' @param t A numerical scalar indicating the value below which the E-M
 #' 	algorithm should stop.
+#' @param penaltyScale A positive scale parameter to penalise biologically nonsensical solutions. Defaults to 0.
 #' @return A list with class \code{em} containing the following components:
 #' 	\item{lambda}{a numerical vector of length \code{length(data)} containing,
 #'    for each datum, the probability to belong to distribution \code{D1}.}
@@ -120,6 +163,10 @@ em <- function(data, D1, D2, t=1e-64, penaltyScale=0) {
   start <- as.list(startval(data,D1,D2))
   D1b <- dHash[[D1]]
   D2b <- dHash[[D2]]
+  P1  <- pHash[[D1]]
+  P2  <- pHash[[D2]]
+  Q1  <- qHash[[D1]]
+  Q2  <- qHash[[D2]]
   lambda0 <- 0 # the previous value of lambda (scalar).
   with(start, {
     while(abs(lambda0-mean(lambda))>t) {
@@ -131,7 +178,7 @@ em <- function(data, D1, D2, t=1e-64, penaltyScale=0) {
       lambda <- distr1/(distr1+distr2) # lambda is a vector.
 # Minimization step (maximum-likelihood parameters estimations):
       mLL2 <- function(mu1,sigma1,mu2,sigma2)
-			return(mLL(mu1,sigma1,mu2,sigma2,lambda,data,D1b,D2b,penaltyScale))
+			return(mLL(mu1,sigma1,mu2,sigma2,lambda,data,D1b,D2b,P1,P2,Q1,Q2,penaltyScale))
       start <- as.list(log(c(mu1=mu1,sigma1=sigma1,mu2=mu2,sigma2=sigma2)))
       out <- bbmle::mle2(mLL2,start,"Nelder-Mead")
 # The following 4 lines assign the MLE values to the corresponding parameters:

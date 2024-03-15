@@ -18,16 +18,33 @@ findmode <- function(D,p1,p2) {
 #' @importFrom stats uniroot
 #' @keywords internal
 # This function returns the cutoff value given parameters values.
-cutoff0 <- function(mu1,sigma1,mu2,sigma2,lambda,D1,D2,distr=2,type1=.05) {
-# "distr" indicates which peak we are targetting.
+cutoff0 <- function(mu1,sigma1,mu2,sigma2,lambda,D1,D2,distr=2,type1=.05,whose) {
+  # "distr" indicates which peak we are targetting.
+  ## browser()
   interval <- c(findmode(D1,mu1,sigma1),findmode(D2,mu2,sigma2))
 #  dHash <- c(normal=dnorm,"log-normal"=dlnorm,gamma=dgamma,weibull=dweibull)
-  D1 <- dHash[[D1]]
-  D2 <- dHash[[D2]]
-  distr1 <- function(x) lambda * D1(x, mu1, sigma1)
-  distr2 <- function(x) (1 - lambda) * D2(x, mu2, sigma2)
-  if(distr==1) p <- function(x) distr1(x)/(distr1(x)+distr2(x))-1+type1
-  else p <- function(x) distr2(x)/(distr1(x)+distr2(x))-1+type1
+  D1b <- dHash[[D1]]
+  D2b <- dHash[[D2]]
+  P1  <- pHash[[D1]]
+  P2  <- pHash[[D2]]
+  if (whose=="Choisy") {
+    distr1 <- function(x) lambda * D1b(x, mu1, sigma1)
+    distr2 <- function(x) (1 - lambda) * D2b(x, mu2, sigma2)
+    if(distr==1) {
+      p <- function(x) distr1(x)/(distr1(x)+distr2(x))-1+type1
+    }  else {
+      p <- function(x) distr2(x)/(distr1(x)+distr2(x))-1+type1
+    }
+  }
+  if (whose=="Titterington") {
+    w1 = lambda
+    w2 = 1 - lambda
+    if (mu1 < mu2) {
+      p <- function(x) (w1 - w1*P1(x,mu1,sigma1)) - (w2*P2(x,mu2,sigma2))
+    } else {
+      p <- function(x) (w2 - w2*P2(x,mu2,sigma2)) - (w1*P1(x,mu1,sigma1))
+    }
+  }
   return(uniroot(p,interval)$root)
 }
 
@@ -53,10 +70,15 @@ cutoff0 <- function(mu1,sigma1,mu2,sigma2,lambda,D1,D2,distr=2,type1=.05) {
 #'
 #' @inheritParams em
 #' @inheritParams confint.em
+#' @param level The confidence level required. Defaults to 0.95.
 #' @param object An output from the function \code{em}.
 #' @param distr Either 1 or 2, indicates which distribution belonging the Type-I
-#'   error corresponds to. 1 correspond to the first distribution in \code{object}.
-#' @param type1 A numerical value between 0 and 1, the value of the type-I error.
+#'   error corresponds to. 1 correspond to the first distribution in \code{object}. Only applies when whose=="Choisy".
+#' @param type1 A numerical value between 0 and 1, the value of the type-I error. Only applies when whose=="Choisy".
+#' @param whose A character string indicating whose cutoff to use.
+#'   The default setting "Choisy" lets the function behave as it does in Marc Choisy's cutoff package.
+#'   Alternatively, "Titterington" can be chosen, in which case a cutoff is returned that ensures the probabilities
+#'   of type-I and type-II errors are equal for any data distributed according to the mixture model.
 #' @return Returns a numerical vector of lenght 3, the first value being the
 #'   estimated value of the cutoff and the second and thrid values being the
 #'   lower and upper bound of the confidence interval of this estimate, at the
@@ -79,16 +101,21 @@ cutoff0 <- function(mu1,sigma1,mu2,sigma2,lambda,D1,D2,distr=2,type1=.05) {
 #' (measles_out <- em(measles,"normal","normal"))
 #' # Adding the E-M estimated finite mixture model:
 #' lines(measles_out,lwd=1.5,col="red")
-#' # Estimating a cutoff value from this fitted finite mixture model:
+#' # Estimate a cutoff from the fitted mixture model (Choisy method):
 #' (cut_off <- cutoff(measles_out))
 #' polygon(c(cut_off[-1],rev(cut_off[-1])),c(0,0,.55,.55),
 #'    col=rgb(0,0,1,.2),border=NA)
 #' abline(v=cut_off[-1],lty=2,col="blue")
 #' abline(v=cut_off[1],col="blue")
+#' # Estimate a cutoff from the fitted mixture model (Titterington method):
+#' (cut_off <- cutoff(measles_out, whose="Titterington"))
+#' polygon(c(cut_off[-1],rev(cut_off[-1])),c(0,0,.55,.55), col=rgb(0,1,0,.2),border=NA)
+#' abline(v=cut_off[-1],lty=2,col="green")
+#' abline(v=cut_off[1],col="green")
 #' @export
 # This function returns cutoff value together with confidence interval from an
 # output of the "em" function.
-cutoff <- function(object,t=1e-64,nb=10,distr=2,type1=.05,level=.95) {
+cutoff <- function(object,t=1e-64,nb=10,distr=2,type1=.05,level=.95,whose="Choisy") {
   # "object" is an output of the "em" function.
   #  require(mc2d) # for "rmultinormal".
   #  require(MASS) # for "fitdistr".
@@ -119,7 +146,7 @@ cutoff <- function(object,t=1e-64,nb=10,distr=2,type1=.05,level=.95) {
     })
     # Call the function "cutoff0" for each combination of parameters values:
     out <- sapply(coef,function(x)
-      with(x,cutoff0(mu1,sigma1,mu2,sigma2,lambda,D1,D2,distr,type1)))
+      with(x,cutoff0(mu1,sigma1,mu2,sigma2,lambda,D1,D2,distr,type1,whose)))
     # Calculate the mean of the cutoff value, together with its confidence interval:
     out <- MASS::fitdistr(out,"normal")
     the_mean <- out$estimate["mean"]

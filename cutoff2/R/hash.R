@@ -1,5 +1,5 @@
 #' @noRd
-#' dHash <- list(normal       = stats::dnorm,
+dHash <- list(normal       = stats::dnorm,
               `log-normal` = stats::dlnorm,
               gamma        = stats::dgamma,
               weibull      = stats::dweibull)
@@ -16,4 +16,4 @@ qHash <- list(normal       = stats::qnorm,
               gamma        = stats::qgamma,
               weibull      = stats::qweibull)
 
-### save(dHash, pHash, qHash, file = here::here("cutoff2/R/sysdata.rda"))
+### save(dHash, pHash, qHash, file = here::here("cutoff2/R/sysdata.rdb"))

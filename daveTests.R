@@ -11,9 +11,13 @@ xRange[2] = ceiling(xRange[2])
 curve(w[1]*dnorm(x,mu[1],sd[1]) + w[2]*dnorm(x,mu[2],sd[2]), xRange[1], xRange[2], n=1111)
 curve(w[1]*dnorm(x,mu[1],sd[1]), xRange[1], xRange[2], n=1111, add=TRUE, col="blue")
 curve(w[2]*dnorm(x,mu[2],sd[2]), xRange[1], xRange[2], n=1111, add=TRUE, col="red")
-nimPrint(w)
+print(w)
 
+dHash
 
+cutoff(object,t=1e-64,nb=10,distr=2,type1=.05,level=.95,whose="Choisy") {
+cutoff(mu1=mu[1],sigma1=sd[1],mu2=mu[2],sigma2=sd[2],w[1],D1="normal",D2="normal",distr=2,type1=.05,whose="Titterington")
+c
 ## curve(w[1]*pnorm(x,mu[1],sd[1]) + w[2]*pnorm(x,mu[2],sd[2]), xRange[1], xRange[2], n=1111)
 ## curve(w[1]*pnorm(x,mu[1],sd[1]), xRange[1], xRange[2], n=1111, add=TRUE, col="blue")
 ## curve(w[2]*pnorm(x,mu[2],sd[2]), xRange[1], xRange[2], n=1111, add=TRUE, col="red")
