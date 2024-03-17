@@ -2,6 +2,7 @@ Package: cutoff2
 Type: Package
 Title: Identify a cutoff value from bimodal data
 Version: 0.1.0
+Depends: R (>= 2.10)
 Encoding: UTF-8
 Date: 2024-15-03
 Authors@R: c(

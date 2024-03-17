@@ -20,13 +20,16 @@ findmode <- function(D,p1,p2) {
 # This function returns the cutoff value given parameters values.
 cutoff0 <- function(mu1,sigma1,mu2,sigma2,lambda,D1,D2,distr=2,type1=.05,whose) {
   # "distr" indicates which peak we are targetting.
-  ## browser()
-  interval <- c(findmode(D1,mu1,sigma1),findmode(D2,mu2,sigma2))
-#  dHash <- c(normal=dnorm,"log-normal"=dlnorm,gamma=dgamma,weibull=dweibull)
+  # browser()
   D1b <- dHash[[D1]]
   D2b <- dHash[[D2]]
   P1  <- pHash[[D1]]
   P2  <- pHash[[D2]]
+  Q1  <- qHash[[D1]]
+  Q2  <- qHash[[D2]]
+  # interval <- c(findmode(D1,mu1,sigma1),findmode(D2,mu2,sigma2)) # Possibly insufficiently robust
+  interval <- c(min(Q1(1E-11,mu1,sigma1),Q2(1E-11,mu2,sigma2)),
+                max(Q1(1 - 1E-11,mu1,sigma1),Q2(1 - 1E-11,mu2,sigma2)))
   if (whose=="Choisy") {
     distr1 <- function(x) lambda * D1b(x, mu1, sigma1)
     distr2 <- function(x) (1 - lambda) * D2b(x, mu2, sigma2)
