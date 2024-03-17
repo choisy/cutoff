@@ -4,17 +4,19 @@
 # This function returns minus the log-likelihood of the set of parameters "mu1",
 # "sigma1", "mu2" and "sigma2", given dataset "data", distributions "D1" and
 # "D2", and parameter "lambda".
-mLL <- function(mu1,sigma1,mu2,sigma2,lambda,data,D1,D2,P1,P2,Q1,Q2,penaltyScale) {
+mLL <- function(mu1,sigma1,mu2,sigma2,lambdaVec,data,D1,D2,P1,P2,Q1,Q2,penaltyScale) {
 # "mu1", "mu2", "sigma1" and "sigma2" are the log of the parameter values.
-# "lambda" and "data" are two numeric vectors of the same length.
+# "lambdaVec" and "data" are two numeric vectors of the same length.
 # "D1" and "D2" are two probability density functions.
 # "P1" and "P2" are two cummulative distribution functions.
 # "Q1" and "Q2" are two quantile functions.
   params <- c(mu1,sigma1,mu2,sigma2)
   names(params) <- c("mu1","sigma1","mu2","sigma2")
+  lambda = mean(lambdaVec)
   with(as.list(exp(params)), {
-    out1 <-    lambda  * D1(data,mu1,sigma1)
-    out2 <- (1-lambda) * D2(data,mu2,sigma2)
+    ## Expected values of complete data log likelihoods
+    ECDLL <- (log(lambda)   + D1(data,mu1,sigma1,log=TRUE)) * lambdaVec +
+             (log(1-lambda) + D2(data,mu2,sigma2,log=TRUE)) * (1 - lambdaVec)
     ## Penalties
     penalty <- 0
     if (penaltyScale > 0) {
@@ -24,7 +26,7 @@ mLL <- function(mu1,sigma1,mu2,sigma2,lambda,data,D1,D2,P1,P2,Q1,Q2,penaltyScale
         penalty <- calcPenalty(mu2,sigma2,mu1,sigma1,1-lambda,data,D2,D1,P2,P1,Q2,Q1,penaltyScale)
       }
     }
-    return( -sum(log(out1 + out2)) - penalty)
+    return( -sum(ECDLL) - penalty)
   })
 }
 
@@ -45,24 +47,22 @@ calcPenalty <- function(MU1,SIGMA1,MU2,SIGMA2,LAMBDA,data,d1,d2,p1,p2,q1,q2,pena
   iNonsenseLeft = w1*d1(X,MU1,SIGMA1) < w2*d2(X,MU2,SIGMA2)
   iNonsenseLeft = cumprod(iNonsenseLeft)==1
   ii            = sum(iNonsenseLeft)
-  penaltyLeft   = 0
+  areaNonsenseLeft   = 0
   if (ii > 0) {
     areaNonsenseLeft = (w2*(p2(X[ii],MU2,SIGMA2))) - (w1*(p1(X[ii],MU1,SIGMA1)))
-    penaltyLeft      = log(1-areaNonsenseLeft)
   }
   #### Penalise RHS
   X              = seq(floor(q2(1E-11,MU2,SIGMA2)), ceiling(q2(1-1E-11,MU2,SIGMA2)), l=1111)
   iNonsenseRight = w1*d1(X,MU1,SIGMA1) > w2*d2(X,MU2,SIGMA2)
   iNonsenseRight = rev(cumprod(rev(iNonsenseRight))==1)
   ii             = sum(!iNonsenseRight)
-  penaltyRight   = 0
+  areaNonsenseRight   = 0
   if (ii < length(X)) {
     areaNonsenseRight = w1*(1-p1(X[ii],MU1,SIGMA1)) - w2*(1-p2(X[ii],MU2,SIGMA2))
-    penaltyRight      = log(1-areaNonsenseRight)
   }
   #### Total Penalty
-  penaltyTotal = penaltyScale * (penaltyLeft + penaltyRight)
-  return(penaltyTotal)
+  penalty      = penaltyScale * log(1-areaNonsenseLeft-areaNonsenseRight)
+  return(penalty)
 }
 
 #-------------
@@ -170,7 +170,7 @@ em <- function(data, D1, D2, t=1e-64, penaltyScale=0) {
   lambda0 <- 0 # the previous value of lambda (scalar).
   with(start, {
     while(abs(lambda0-mean(lambda))>t) {
-      lambda <- mean(lambda)
+      lambda  <- mean(lambda)
       lambda0 <- lambda
 # Expectation step:
       distr1 <- lambda*D1b(data,mu1,sigma1)
@@ -239,8 +239,8 @@ lines.em <- function(object,...) {
 # ...: parameter passed to the "line" function.
   with(object,with(as.list(param), {
     lambda <- mean(lambda)
-    curve(dnorm(x,mu1,sigma1),add=T,n=512,lty=2,...)
-    curve(dnorm(x,mu2,sigma2),add=T,n=512,lty=2,...)
+    curve(lambda*dnorm(x,mu1,sigma1),add=T,n=512,lty=2,...)
+    curve((1-lambda)*dnorm(x,mu2,sigma2),add=T,n=512,lty=2,...)
     curve(lambda*dnorm(x,mu1,sigma1)+
       (1-lambda)*dnorm(x,mu2,sigma2),add=T,n=512,...)
   }))
