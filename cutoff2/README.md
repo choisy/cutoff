@@ -16,4 +16,4 @@ for acute gastroenteritis. Epidemiol Infect. In press.
 # Installation
 To install cutoff2, run the following code
 
-``` remotes::install_github("DRJP/cutoff/cutoff2@penalties") ```
+``` devtools::install_github("DRJP/cutoff/cutoff2@penalties", build_manual=TRUE, build_vignettes=TRUE) ```
