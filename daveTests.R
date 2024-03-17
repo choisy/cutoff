@@ -1,3 +1,4 @@
+## remotes::install_github("DRJP/cutoff/cutoff2@penalties")
 ## remotes::install_github("DRJP/cutoff/cutoff2@penalties", build_manual=TRUE, build_vignettes=TRUE)
 library(cutoff2)
 rm(list=ls())
